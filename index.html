@@ -362,8 +362,8 @@
 
 
     function _checkFileSizeFacility(size, name) {
-      // check if size exceed 90 KiB :
-      if (size > 900 * 1024) {
+      // check if size exceed 50 KiB :
+      if (size > 500 * 1024) {
         var size_string = numeral(size).format('0.0 ib');
         throw new Error("The size of <b>" + name + "</b> is <b>" + size_string + "</b>." + "<p>Please select a file that does not exceed <b>90 KiB</b>.");
       }
