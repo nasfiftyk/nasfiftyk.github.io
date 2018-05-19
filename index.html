@@ -1,1 +1,809 @@
-Hello World
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="img/favicon.ico">
+
+  <title>Fifty-K: a 50KiB storage tool powered by Nebulas</title>
+
+  <script src="js/jquery-3.3.1.min.js"></script>
+  <script src="js/bootstrap.bundle.js"></script>
+  <script src="js/bootstrap-table.js"></script>
+  <script src="lib/bootbox.min.js"></script>
+
+  <script src="js/1-localSave.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/base64.js"></script>
+  <script src="js/md5-min.js"></script>
+  <script src="js/download.js"></script>
+  <script src="lib/nebulas.js"></script>
+  <script src="lib/nebPay.js"></script>
+  <script src="js/numeral.min.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link href="css/bootstrap-min.css" rel="stylesheet">
+  <!-- Custom styles for this template -->
+  <link href="css/jumbotron.css" rel="stylesheet">
+  <link href="css/bootstrap-table.min.css" rel="stylesheet">
+  <link href="css/dropzone.css" rel="stylesheet">
+  <link href="css/fiftyk.css" rel="stylesheet">
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-md  fixed-top ">
+    <a href="#" class="navbar-left"><img src="img/logo.png"></a>
+    <h1 class="display-5">Browse. Upload. Done.</h1>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+    </div>
+
+    <form class="form-inline mt-2 mt-md-0">
+      <button type="button" class="btn btn-success" id="walletCheckButtonId" onclick="getWalletExtension()"><i class="fa fa-check"></i> Wallet Extension</button>
+    </form>
+
+  </nav>
+
+  <main role="main">
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+
+      <p></p>
+      <p class="lead"><b>Store files smaller than 50 kilobytes in the Nebulas blockchain</b></p>
+
+      <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+      <hr class="my-4">
+      <div class="mx-auto DisplayFrontClass" id="loggedId">
+        <p class="text-center">What file do you want to store ?</p>
+        <div class="mbr-section-btn align-center py-2 text-center">
+          <span class="file-input btn btn-primary btn-file btn-space ">
+            <i class="fa fa-file"></i> Browse&hellip; <input type="file" onchange="handleUploadFile(this.files)">
+          </span>
+          <a class="btn btn-primary btn-space disabled" id="tx_button" href="#" role="button" onclick="triggerUpload()"><i class="fa fa-upload"></i> Upload</a>
+        </div>
+      </div>
+      <div class="mx-auto w-75" id="transactionBoxId" >
+        <p class="card-title" id="fileInfoId"></p>
+        <p class="card-title" id="transactionStatusId"> </p>
+        <p class="card-title" id="transactionTextId"> <a href="#" id="transactionLinkId"  target="_blank"></a></p>
+        <button type="button" class="btn btn-outline-primary btn-sm" style="display: none;" id="transactionHideId" onclick="hideTxBlock()">Hide</button>
+
+      </div>
+
+      <!--Ask for login:  -->
+      <div>
+
+        <form class="form-signin container w-50 DisplayLoginClass" id="signinFormId" style="display:none;">
+
+          <button type="button" class="btn btn-lg btn-primary btn-block" onclick="triggeredEnter()">Enter</button>
+        </form>
+      </div>
+      <!-- end of Ask for login  -->
+
+
+    </div>
+    <!-- end of jumbotron  -->
+
+    <!--display fifty-k presentation if not logged : -->
+    <div class="container DisplayLoginClass" style="display:none;">
+      <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+          <div class="icon-left">
+            <i class="fa fa-universal-access fa-3x"></i>
+          </div>
+          <div class="text">
+            <h4> Easy to use </h4>
+            <p> Select any file smaller than 50 KiB and store it for you personnal use cases or for sharing with others.</p>
+          </div> <br>
+          <div class="icon-left">
+            <i class="fa fa-search fa-3x"></i>
+          </div>
+          <div class="text">
+            <h4> Search for contents </h4>
+            <p>Look for data you previously stored or have been stored by others. Research criteria are based on file name, file hash or sender's Nebulas address.</p>
+          </div> <br>
+
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+          <div class="icon-left">
+            <i class="fa fa-dollar fa-3x"></i>
+          </div>
+          <div class="text">
+            <h4> Free </h4>
+            <p> Searching and retrieving stored content is free.
+              Storing data will only cost the Nebulas transaction fee. </p>
+            </div><br>
+            <div class="icon-left">
+              <i class="fa fa-save fa-3x"></i>
+            </div>
+            <div class="text">
+              <h4> Reliable </h4>
+              <p>Securely saved in the Nebulas blockchain. Data remain available for anybody, from everywhere, anytime.</p>
+            </div><br>
+
+          </div>
+        </div>
+      </div>
+      <!-- display fifty-k presentation if not logged  -->
+
+
+      <div class="container DisplayFrontClass">
+        <div class="btn-toolbar " role="toolbar" aria-label="Toolbar with button groups">
+          <div class="btn-group" role="group" aria-label="First group">
+            <div class="input-prepend input-append">
+              <div class="dropdown show">
+                <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Search by...
+                </a>
+
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                  <a class="dropdown-item" href="#" onclick='searchTable("filename")'>File Name</a>
+                  <a class="dropdown-item" href="#" onclick='searchTable("filehash")'>File Hash</a>
+                  <a class="dropdown-item" href="#" onclick='searchTable("from")'>From</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="btn-group " role="group" aria-label="Second group">
+            <input type="text" class="form-control" id="searchFieldId" placeholder="Enter file name" aria-label="Input group example" aria-describedby="btnGroupAddon">
+          </div>
+          <div class="btn-group" role="group" aria-label="Third group">
+            <button type="button" class="btn btn-primary" onclick="fillTable()"><i class="fa fa-search"></i></button>
+          </div>
+        </div>
+
+
+        <table id="table" data-toggle="table"
+        data-ajax="ajaxRequest"
+        data-side-pagination="server"
+        data-pagination="true"
+        data-sort-order="desc">
+        <thead>
+          <tr>
+            <th data-field="counter">#</th>
+            <th data-field="fileName">File Name</th>
+            <th data-field="md5" >File Hash</th>
+            <th data-field="from">From</th>
+          </tr>
+        </thead>
+      </table>
+
+    </div> <!-- /container -->
+
+
+
+  </main>
+
+  <footer class="container text-center">
+    <hr class="my-4">
+    Powered by <a href="https://nebulas.io/" data-value="action" target="_blank">Nebulas</a>
+    <p>
+      <a href="mailto:nas.fiftyk@gmail.com">Contact us</a> | <a class="terms-use-btn" href="#" onclick="displayTermsOfUse()">Disclamer</a> |  Donate: <a href="http://nas.me/zozzio" data-value="action" target="_blank">nas.me/zozzio</a><p>
+      </footer>
+
+      <!-- Bootstrap core JavaScript
+      ================================================== -->
+      <!-- Placed at the end of the document so the pages load faster -->
+
+    </body>
+    </html>
+
+
+    <script>
+
+    "use strict";
+    var txStatusDict = {
+      0: "failed",
+      1: "success",
+      2: "pending"
+    };
+
+    initDisplay();
+
+    var gtableParams;
+    var gAccount;
+    var gFileJson;
+    var gNebPaySerialNumber;
+    var gNebPayIntervalQuery;
+    var gNebPayIntervaltimer = 0;
+    var gdAppContractAddress;
+    var gChainId;
+    var nebulas = require("nebulas");
+    var gsearchCriteria;
+
+    var NebPay = require("nebpay");
+    var nebPay = new NebPay();
+
+    //to check if the extension is installed
+    //if the extension is installed, var "webExtensionWallet" will be injected in to web page
+    if(typeof(webExtensionWallet) === "undefined"){
+      $("#walletCheckButtonId").removeClass("btn-success").addClass("btn-danger");
+      walletCheckButtonId.innerHTML = "<i class=\"fa fa-arrow-right\"></i> Get Wallet Extension";
+      displayRedirectWalletExtension();
+    }
+    else {
+      $("#walletCheckButtonId").removeClass("btn-danger").addClass("btn-success");
+    }
+
+    // redirect toward wallet extention download :
+    function getWalletExtension() {
+      window.open("https://github.com/ChengOrangeJu/WebExtensionWallet");
+    }
+
+    var Account = nebulas.Account;
+    var Transaction = nebulas.Transaction;
+    var Unit = nebulas.Unit;
+
+    var guploadData = {
+      name: "",
+      base64: "",
+      md5: "",
+      size: "",
+      validated: false
+    };
+
+    var neb = new nebulas.Neb();
+    var api = neb.api;
+    setNebUrl();
+    setSmartContractAddress();
+
+
+    // smart contract on mainnet:
+    function setSmartContractAddress() {
+      gdAppContractAddress = "n1tG7448kXf7Dzb6ACpM1vH7jn4ZYFqBcEt";
+      console.log(gdAppContractAddress);
+    }
+
+
+
+    function setNebUrl() {
+      neb.setRequest(new nebulas.HttpRequest("https://mainnet.nebulas.io"));
+    }
+
+
+
+    function initDisplay() {
+      $(".DisplayLoginClass").hide();
+
+      var showLoginPage = false;
+
+      if (localStorage.getItem('enter_fiftyK') === null) {
+        showLoginPage = true;
+      }
+
+      if (showLoginPage === true) {
+        $('.DisplayLoginClass:hidden').fadeIn(1000);
+        $(".DisplayFrontClass").hide();
+
+      }
+      else{
+        $(".DisplayLoginClass").hide();
+        $('.DisplayFrontClass').fadeIn(1000);
+        //$("#loggedId").show();
+      }
+
+    }
+    // display welcome page for newcomers :
+    function triggeredEnter() {
+      localStorage.setItem('enter_fiftyK', 'true');
+      initDisplay();
+    }
+
+    function displayRedirectWalletExtension() {
+      bootbox.alert("<h4>WebExtensionWallet Required</h4>Please install <a href=\"https://github.com/ChengOrangeJu/WebExtensionWallet\" target=\"_blank\">WebExtensionWallet</a> in order to be able to store your data in the Nebulas Blockchain.");
+    }
+
+    function updateFileInfoIdDisplay(text) {
+      document.getElementById("transactionBoxId").style.display = "block";
+      fileInfoId.innerHTML = "File: " + text;
+    }
+    function updatetransactionStatusIdDisplay(text) {
+      transactionStatusId.innerHTML = "Status: " + text;
+    }
+    function updatetransactionTextIdDisplay(text) {
+      transactionTextId.innerHTML = "Transaction: " + text;
+
+    }
+
+
+
+    function processForm(e) {
+      if (e.preventDefault) e.preventDefault();
+      /* do what you want with the form */
+      // You must return false to prevent the default form behavior
+      return false;
+    }
+
+    var signinFormId = document.getElementById('signinFormId');
+    if (signinFormId.attachEvent) {
+      signinFormId.attachEvent("submit", processForm);
+    } else {
+      signinFormId.addEventListener("submit", processForm);
+    }
+
+
+
+    //-----------------------------------------------------------------------------
+    // upload functions
+    //-----------------------------------------------------------------------------
+    function handleUploadFile(files) {
+
+      try {
+        _handleUploadFile(files);
+
+        if(typeof(webExtensionWallet) != "undefined"){
+          $("#tx_button").removeClass("disabled");
+          $("#transactionBoxId").fadeIn(1000);
+        }
+
+
+      }
+      catch(e) {
+        console.log(e);
+        bootbox.alert({
+          size: "medium",
+          title: "Error",
+          message: e.message,
+          closeButton: false
+        });
+        $("#tx_button").addClass("disabled");
+        // expected output: "Parameter is not a number!"
+      }
+
+    }
+
+
+    function _checkFileSizeFacility(size, name) {
+      // check if size exceed 90 KiB :
+      if (size > 900 * 1024) {
+        var size_string = numeral(size).format('0.0 ib');
+        throw new Error("The size of <b>" + name + "</b> is <b>" + size_string + "</b>." + "<p>Please select a file that does not exceed <b>90 KiB</b>.");
+      }
+    }
+
+    function _checkFileSize(file) {
+      // check if size exceed 90 KiB :
+      _checkFileSizeFacility(file.size, file.name);
+    }
+
+    function _handleUploadFile(files) {
+
+      if (!files.length) {
+        updateFileInfoIdDisplay("No file selected !");
+
+      } else {
+        updateFileInfoIdDisplay("");
+        updatetransactionStatusIdDisplay("");
+        updatetransactionTextIdDisplay("");
+
+        var list = document.createElement("ul");
+
+        _checkFileSize(files[0]);
+
+        var fsize = files[0].size;
+        var size_string = numeral(fsize).format('0.0 ib');
+
+        updateFileInfoIdDisplay(files[0].name + ' (<b>' + size_string + '</b>)');
+
+        if(typeof(webExtensionWallet) === "undefined"){
+          updatetransactionStatusIdDisplay("Can not upload. WebExtensionWallet not Found!");
+        }
+        else {
+          updatetransactionStatusIdDisplay("Ready to upload.");
+        }
+        updatetransactionTextIdDisplay("Not available");
+        var $this = $(this);
+        var file = files[0];
+        var fr = new FileReader();
+        var encodedString;
+
+
+        fr.onload = onload;
+        //fr.readAsText(file);
+        fr.readAsDataURL(file);
+        function onload(e) {
+          try {
+            //encodedString = btoa(e.target.result);
+            //encodedString = Base64.encode(e.target.result);
+            encodedString = e.target.result;
+
+
+            console.log(files[0].name);
+            //console.log(encodedString);
+            guploadData.name = files[0].name;
+            guploadData.base64 = encodedString;
+            guploadData.md5 = md5(encodedString);
+            guploadData.size = md5(fsize.size);
+            guploadData.validated = true;
+
+          } catch (e) {
+            bootbox.dialog({
+              backdrop: true,
+              onEscape: true,
+              message: e.message,
+              size: "large",
+              title: "Error"
+            });
+          }
+        }
+
+      }
+    };
+
+
+    function triggerUpload() {
+
+      console.log (guploadData.name);
+
+    }
+
+    // display transaction informations to user :
+    function hideTxBlock() {
+      hideTxbuttonStatus("true");
+      document.getElementById("transactionBoxId").style.display = "none";
+    }
+
+    function hideTxbuttonStatus(hide) {
+
+      var buttonHide = document.getElementById("transactionHideId");
+      if (hide === "true") {
+        buttonHide.style.display = "none";
+      }
+      else {
+        buttonHide.style.display = "block";
+      }
+
+    }
+
+
+    // table search criteria :
+    function searchTable(msg) {
+
+      gsearchCriteria = msg;
+      if ( msg === "filename") {
+        document.getElementById('searchFieldId').placeholder='Enter file name';
+      }
+      if ( msg === "filehash") {
+        document.getElementById('searchFieldId').placeholder='Enter file hash';
+      }
+      if ( msg === "from") {
+        document.getElementById('searchFieldId').placeholder='Enter Nebulas address';
+      }
+      console.log(msg);
+    }
+
+
+    //----------------------------------------------------------------------------------------------------------
+    // Nebulas tx related :
+    //----------------------------------------------------------------------------------------------------------
+    $("#tx_button").click(function() {
+
+      try {
+
+        if (guploadData.validated === false) {
+          throw new Error ("Cannot Upload: File has not been selected.");
+        }
+
+        var value  = guploadData.md5 + ";md5," + guploadData.base64;
+        var args = "[\"" + guploadData.name + "\",\"" + value + "\"]";
+        var callFunction = "save"
+
+
+        updatetransactionStatusIdDisplay("<i class=\"fa fa-spinner fa-spin\"></i> Waiting for confirmation...");
+        generateTransaction(callFunction, args);
+
+      } catch (e) {
+
+        updatetransactionStatusIdDisplay("Fail");
+        hideTxbuttonStatus("false");
+        clearInterval(gNebPayIntervalQuery);
+        bootbox.dialog({
+          backdrop: true,
+          onEscape: true,
+          message: e.message,
+          size: "large",
+          title: "Error"
+        });
+
+      }
+
+    });
+
+
+    function generateTransaction(callFunction, args) {
+
+      var nasValue = "0";
+      gNebPaySerialNumber = nebPay.call(gdAppContractAddress, nasValue, callFunction, args, {
+        listener: callbackSaveFunction
+      });
+
+      gNebPayIntervalQuery = setInterval(function () {
+        nebPayCallIntervalCheckTx();
+      }, 12000);
+
+    }
+
+
+    function nebPayCallIntervalCheckTx() {
+
+      gNebPayIntervaltimer += 1;
+
+      // consider transaction as finished if timeout reached :
+      if (gNebPayIntervaltimer > 6) {
+
+        gNebPayIntervaltimer = 0;
+        updatetransactionStatusIdDisplay("<i class=\"fa fa-check\"></i> File successfully stored");
+        hideTxbuttonStatus("false");
+        clearInterval(gNebPayIntervalQuery);
+        fillTable();
+
+      }
+
+      else {
+        nebPay.queryPayInfo(gNebPaySerialNumber).then(function (resp) {
+
+          console.log(resp);
+          var receipt = JSON.parse(resp);
+          var txstatus = receipt.data.status;
+
+          if (txStatusDict[txstatus] === "pending") {
+
+            console.log("TX PENDING");
+            updatetransactionStatusIdDisplay("<i class=\"fa fa-spinner fa-spin\"></i> Pending...");
+
+          }
+          else if (txStatusDict[txstatus] === "success") {
+            console.log("TX SUCCESS");
+            updatetransactionStatusIdDisplay("<i class=\"fa fa-check\"></i> File successfully stored");
+            hideTxbuttonStatus("false");
+
+
+            clearInterval(gNebPayIntervalQuery);
+            fillTable();
+          }
+          else if (txStatusDict[txstatus] === "failed") {
+
+            console.log("TX FAILED");
+            updatetransactionStatusIdDisplay("<i class=\"fa fa-exclamation-circle\"></i> Fail");
+            hideTxbuttonStatus("false");
+            clearInterval(gNebPayIntervalQuery);
+          }
+
+        });
+
+      }
+
+    }
+
+
+    function callbackSaveFunction(hash) {
+
+      // transaction has benn cancelled by user :
+      if (hash.txhash == null) {
+
+        if ( hash.indexOf("rejected") >= 0 ) {
+
+          console.log("TX CANCELLED");
+          updatetransactionStatusIdDisplay("<i class=\"fa fa-exclamation-circle\"></i> Canceled");
+          hideTxbuttonStatus("false");
+          clearInterval(gNebPayIntervalQuery);
+        }
+      }
+
+      // else transaction receipt :
+      else {
+        console.log("response of push: " + JSON.stringify(hash))
+
+        updatetransactionTextIdDisplay(hash.txhash);
+
+        // then disable updload button :
+        api.getTransactionReceipt({hash: hash.txhash}).then(function(receipt) {
+          console.log(receipt);
+          $("#tx_button").addClass("disabled");
+
+        });
+
+      }
+    }
+
+
+
+    // convert dataURI to blob in order to be able to
+    // retrieve binary content from base64:
+    function dataURItoBlob(dataURI) {
+      var BASE64_MARKER = ";base64,";
+
+      if (dataURI.indexOf(BASE64_MARKER) == -1)
+      {
+        var parts = dataURI.split(",");
+        var contentType = parts[0].split(":")[1];
+        var raw = decodeURIComponent(parts[1]);
+
+        return new Blob([raw], {type: contentType});
+      }
+
+      var parts = dataURI.split(BASE64_MARKER);
+      var contentType = parts[0].split(":")[1];
+      var raw = window.atob(parts[1]);
+      var rawLength = raw.length;
+
+      var uInt8Array = new Uint8Array(rawLength);
+
+      for (var i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+      }
+
+      return new Blob([uInt8Array], {type: contentType});
+
+    }
+
+
+    //===========================================================================//
+    // table search data from blockchain related :
+    //===========================================================================//
+
+    var $table = $('#table');
+
+    // get data from Blockchain :
+    function fillTable(){
+
+      if (!gdAppContractAddress) {
+        setSmartContractAddress();
+      }
+
+      var address = gdAppContractAddress;
+
+      var limit = gtableParams.data.limit;
+      //var offset = params.data.offset + 1;
+      var offset = gtableParams.data.offset;
+
+      var searchField = "fileName";
+      var func = "searchFrom";
+      var searchContent = "";
+      var args = "";
+
+      // searchField can take the following values to match with
+      // the same strings defined in the smart contract : "fileName", "md5", "from":
+      if (gsearchCriteria === 'filename') {
+        searchField = 'fileName';
+      }
+      if (gsearchCriteria === 'filehash') {
+        searchField = 'md5';
+      }
+      if (gsearchCriteria === 'from') {
+        searchField = 'from';
+      }
+
+      var textToSearch = document.getElementById('searchFieldId').value.trim();
+
+      // if search input entered is empty
+      if (!textToSearch || 0 === textToSearch.length) {
+        func = "getFileList";
+        args = "[\"" + limit + "\",\"" + offset + "\"]";
+
+      }
+      else {
+        searchContent = textToSearch;
+        args = "[\"" + searchField + "\", \"" + searchContent + "\", \"" + limit + "\",\"" + offset + "\"]";
+      }
+
+      console.log(textToSearch);
+
+      var value = 0;
+      var nonce = 0;
+
+      var gasPrice = "1000000";
+      var gasLimit ="200000";
+      var contract = {
+        "function": func,
+        "args": args
+      }
+
+
+      neb.api.call(address,gdAppContractAddress, value, nonce, gasPrice, gasLimit, contract).then(function (resp) {
+        handleResultData(resp);
+      }).catch(function (err) {
+        //cbSearch(err)
+        console.log("error:" + err.message)
+      })
+
+    }
+
+    // get table params about pagination (offset and limits) that
+    // are then used to query smart contract :
+    function ajaxRequest(params) {
+      gtableParams = params;
+      fillTable();
+    }
+
+
+    // format table display :
+    function handleResultData(resp) {
+
+      var jsonParseArray = JSON.parse(resp['result']);
+
+      var totalEntries = 0;
+      for (var i = 0; i < jsonParseArray.length; i++) {
+        console.log(jsonParseArray[i]);
+
+        jsonParseArray[i].fileName = "<a href=\"#\" id=\"tableLinkFileName\" onclick=\"downloadLink('"+ jsonParseArray[i].index +"'); return false;\">" + jsonParseArray[i].fileName + "</a>"
+        if (totalEntries === 0) totalEntries = jsonParseArray[i].entriesTot;
+      }
+
+      gtableParams.success({
+        total: totalEntries,
+        rows: jsonParseArray
+      });
+
+    }
+
+
+    function handleBase64Result(resp) {
+      var jsonParse = JSON.parse(resp['result']);
+      var data = jsonParse.base64;
+      var fileName = jsonParse.fileName;
+      var blob = dataURItoBlob(data);
+
+      var url  = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      link.click();
+
+      //console.log(decodedString)
+    }
+
+    // link has been clicked, fetch the base64 data at that time and decode it :
+    function downloadLink(index) {
+      console.log(index);
+
+      //var func = "getFromMd5";
+      var func = "getFromIndex";
+      var key = index;
+
+      var args = "[\"" + key + "\"]";
+
+      var value = 0;
+      var nonce = 0;
+
+      var gasPrice = "1000000";
+      var gasLimit ="200000";
+      var contract = {
+        "function": "getFromIndex",
+        "args": args
+      }
+
+      var address = gdAppContractAddress;
+      neb.api.call(address,gdAppContractAddress,value,nonce,gasPrice,gasLimit,contract).then(function (resp) {
+
+        handleBase64Result(resp);
+
+      }).catch(function (err) {
+        console.log("error:" + err.message)
+      })
+
+
+    }
+
+    function displayTermsOfUse() {
+
+      bootbox.alert(
+        "<h4>You shall not use this Dapp in any manner that:</h4><p>promote any illegal activity<p>infringe any copyright, database right or trade mark of any other person<p>contain any material which is defamatory of any person<p>contain any material which is obscene, offensive, hateful or inflammatory<p>promote sexually explicit material<p>promote violence<p>promote discrimination based on race, sex, religion, nationality, disability, sexual orientation or age<p>be threatening, abusive or invade another’s privacy, or cause annoyance, inconvenience or needless anxiety<p>be likely to harass, upset, embarrass, alarm or annoy any other person<p>be used to impersonate any person, or to misrepresent your identity or affiliation with any person"
+      );
+
+    }
+
+
+
+
+
+    </script>
